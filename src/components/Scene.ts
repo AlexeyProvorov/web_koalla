@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import TWEEN from '@tweenjs/tween.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 
 export class Scene {
   private scene: THREE.Scene
@@ -14,6 +15,9 @@ export class Scene {
   private floatingSpeed: number = 0.0015
   private elapsedTime: number = 0
   private rotationInertia = { x: 0, y: 0, z: 0 }
+  private controls: OrbitControls
+  private isDragging: boolean = false
+  private lastMousePosition = { x: 0, y: 0 }
 
   // Массив описаний для 12 граней (ссылки здесь не используются)
   private faceLinks: { link: string; info: string }[] = [
@@ -82,6 +86,19 @@ export class Scene {
     window.addEventListener('resize', this.onWindowResize.bind(this))
     this.renderer.domElement.addEventListener('click', this.onDocumentClick.bind(this), false)
 
+    // Добавляем после создания камеры и рендерера
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement)
+    this.controls.enableDamping = true
+    this.controls.dampingFactor = 0.05
+    this.controls.rotateSpeed = 0.5
+    this.controls.enableZoom = false
+    this.controls.enablePan = false
+
+    // Добавляем обработчики событий мыши
+    this.renderer.domElement.addEventListener('mousedown', this.onMouseDown.bind(this))
+    this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this))
+    this.renderer.domElement.addEventListener('mouseup', this.onMouseUp.bind(this))
+
     this.animate()
   }
 
@@ -97,9 +114,8 @@ export class Scene {
     const totalTriangles = positions.length / 9
     const faceCount = 12
 
-    if (totalTriangles !== faceCount * 3) {
-      console.warn('Неожиданное число треугольников:', totalTriangles)
-    }
+    // Определяем фиксированные цвета радуги для граней
+    const colors = this.getShuffledUniqueColors()
 
     for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
       // Собираем вершины (3 треугольника => 9 вершин)
@@ -121,10 +137,8 @@ export class Scene {
       // Генерируем UV-координаты
       this.generateFaceUVs(faceGeometry)
 
-      // Для каждой грани делаем уникальный цвет: hue = faceIndex / faceCount
-      // s=1 (макс. насыщенность), l=0.6 (или варьируйте, как нравится)
-      const hue = faceIndex / faceCount
-      const faceColor = new THREE.Color().setHSL(hue, 1, 0.6)
+      // Используем предопределенный цвет вместо генерации
+      const faceColor = colors[faceIndex]
 
       // Создаём текстуру с выгравированным текстом
       const engravedTexture = this.createEngravedTexture(
@@ -333,21 +347,50 @@ export class Scene {
     this.renderer.setSize(window.innerWidth, window.innerHeight)
   }
 
+  private onMouseDown = (event: MouseEvent) => {
+    this.isDragging = true
+    this.lastMousePosition = {
+      x: event.clientX,
+      y: event.clientY
+    }
+  }
+
+  private onMouseMove = (event: MouseEvent) => {
+    if (!this.isDragging) return
+
+    const deltaX = event.clientX - this.lastMousePosition.x
+    const deltaY = event.clientY - this.lastMousePosition.y
+
+    this.rotationInertia.y += deltaX * 0.0001
+    this.rotationInertia.x += deltaY * 0.0001
+
+    this.lastMousePosition = {
+      x: event.clientX,
+      y: event.clientY
+    }
+  }
+
+  private onMouseUp = () => {
+    this.isDragging = false
+  }
+
   public animate = () => {
     requestAnimationFrame(this.animate)
     
-    this.elapsedTime += this.floatingSpeed
+    if (!this.isDragging) {
+      this.elapsedTime += this.floatingSpeed
+      
+      // Существующая анимация парения
+      const newY = this.initialY + Math.sin(this.elapsedTime) * this.floatingAmplitude
+      this.dodecahedronGroup.position.y = newY
+      
+      // Автоматическое вращение (если не перетаскиваем)
+      this.dodecahedronGroup.rotation.x += Math.sin(this.elapsedTime * 0.2) * 0.0006
+      this.dodecahedronGroup.rotation.y += Math.cos(this.elapsedTime * 0.15) * 0.0006
+      this.dodecahedronGroup.rotation.z += Math.sin(this.elapsedTime * 0.1) * 0.0004
+    }
     
-    // Увеличенное парение вверх-вниз
-    const newY = this.initialY + Math.sin(this.elapsedTime) * this.floatingAmplitude
-    this.dodecahedronGroup.position.y = newY
-    
-    // Увеличенная в 4 раза скорость вращения
-    this.dodecahedronGroup.rotation.x += Math.sin(this.elapsedTime * 0.2) * 0.0006
-    this.dodecahedronGroup.rotation.y += Math.cos(this.elapsedTime * 0.15) * 0.0006
-    this.dodecahedronGroup.rotation.z += Math.sin(this.elapsedTime * 0.1) * 0.0004
-    
-    // Добавляем инерцию
+    // Применяем инерцию
     this.dodecahedronGroup.rotation.x += this.rotationInertia.x
     this.dodecahedronGroup.rotation.y += this.rotationInertia.y
     this.dodecahedronGroup.rotation.z += this.rotationInertia.z
@@ -357,7 +400,55 @@ export class Scene {
     this.rotationInertia.y *= 0.98
     this.rotationInertia.z *= 0.98
     
+    this.controls.update()
     TWEEN.update()
     this.renderer.render(this.scene, this.camera)
+  }
+
+  private getShuffledUniqueColors(): THREE.Color[] {
+    const colors = [
+      new THREE.Color('#FF9999'),  // Яркий красный
+      new THREE.Color('#99FF99'),  // Яркий зеленый
+      new THREE.Color('#9999FF'),  // Яркий синий
+      new THREE.Color('#FFDD99'),  // Яркий золотой
+      new THREE.Color('#FF99AA'),  // Яркий розовый
+      new THREE.Color('#99FFFF'),  // Яркий циан
+      new THREE.Color('#FFAA99'),  // Яркий оранжевый
+      new THREE.Color('#AA99FF'),  // Яркий индиго
+      new THREE.Color('#AAFF99'),  // Яркий лайм
+      new THREE.Color('#CCCCCC'),  // Светло-серый
+      new THREE.Color('#99DDDD'),  // Яркий морской
+      new THREE.Color('#FFAA88')   // Яркий терракотовый
+    ]
+    
+    // Функция для проверки схожести цветов
+    const areSimilarColors = (color1: THREE.Color, color2: THREE.Color): boolean => {
+      const threshold = 0.15
+      const hsl1: { h: number; s: number; l: number } = { h: 0, s: 0, l: 0 }
+      const hsl2: { h: number; s: number; l: number } = { h: 0, s: 0, l: 0 }
+      color1.getHSL(hsl1)
+      color2.getHSL(hsl2)
+      
+      return Math.abs(hsl1.h - hsl2.h) < threshold &&
+             Math.abs(hsl1.s - hsl2.s) < threshold
+    }
+
+    // Перемешиваем массив
+    for (let i = colors.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[colors[i], colors[j]] = [colors[j], colors[i]]
+    }
+
+    // Проверяем и исправляем похожие цвета
+    for (let i = 0; i < colors.length - 1; i++) {
+      for (let j = i + 1; j < colors.length; j++) {
+        if (areSimilarColors(colors[i], colors[j])) {
+          const nextIndex = (j + 1) % colors.length
+          ;[colors[j], colors[nextIndex]] = [colors[nextIndex], colors[j]]
+        }
+      }
+    }
+
+    return colors
   }
 }
