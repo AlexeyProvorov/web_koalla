@@ -52,16 +52,20 @@ export class Scene {
   constructor(container: HTMLElement) {
     // Сцена
     this.scene = new THREE.Scene()
-    this.scene.background = new THREE.Color(0x1a1a1a)
+    this.scene.background = null
 
     // Камера
     const aspect = container.clientWidth / container.clientHeight
     this.camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000)
     this.camera.position.z = 16
 
-    // Рендерер
-    this.renderer = new THREE.WebGLRenderer({ antialias: true })
+    // Рендерер с прозрачностью
+    this.renderer = new THREE.WebGLRenderer({ 
+      antialias: true,
+      alpha: true
+    })
     this.renderer.setSize(container.clientWidth, container.clientHeight)
+    this.renderer.setClearColor(0x000000, 0)
     container.appendChild(this.renderer.domElement)
 
     // Свет

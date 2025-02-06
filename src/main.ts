@@ -80,3 +80,25 @@ if (container) {
     })
   }
 }
+
+// Добавьте эту функцию после основного кода
+function createStars() {
+  const numberOfStars = 100;
+  const container = document.body;
+  
+  for (let i = 0; i < numberOfStars; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    
+    // Случайное положение
+    star.style.left = `${Math.random() * 100}%`;
+    star.style.top = `${Math.random() * 100}%`;
+    
+    // Случайная длительность мерцания
+    star.style.setProperty('--twinkle-duration', `${2 + Math.random() * 3}s`);
+    
+    container.appendChild(star);
+  }
+}
+
+createStars();
