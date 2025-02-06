@@ -46,6 +46,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         C30,20.335,16,28.261,16,28.261z"/>
       </svg>
     </button>
+    <div id="like-count">Лайков: 0</div>
   </div>
 `
 
@@ -111,6 +112,7 @@ function createStars() {
 
 function setupHeartButton() {
   const heartButton = document.getElementById('heart-btn');
+  const likeCountDisplay = document.getElementById('like-count');
   let scale = 1; // Начальный размер
   let hue = Math.random() * 360; // Случайный цвет
   let saturation = 80; // Увеличиваем насыщенность
@@ -120,9 +122,16 @@ function setupHeartButton() {
   let opacity = 0.1; // Изначально слегка прозрачное
   let isCooldown = false; // Переменная для отслеживания состояния кнопки
 
+  // Получаем количество лайков из localStorage
+  let likeCount = parseInt(localStorage.getItem('likeCount') || '0', 10);
+  likeCountDisplay!.innerText = `Лайков: ${likeCount}`;
+
   // Устанавливаем начальный цвет сердечка с прозрачностью
   const heartIcon = heartButton.querySelector('.heart-icon') as SVGElement;
   heartIcon.style.fill = `hsla(${hue}, ${saturation}%, ${lightness}%, ${opacity})`;
+  const glowOpacity = 0.2; // Уровень свечения
+
+  heartIcon.style.filter = `drop-shadow(0 0 2px hsla(${hue}, ${saturation}%, ${lightness}%, ${glowOpacity})`; // Убираем неоновость
 
   if (heartButton) {
     heartButton.addEventListener('click', () => {
@@ -151,10 +160,16 @@ function setupHeartButton() {
 
       // Обновляем цвет сердечка
       heartIcon.style.fill = `hsla(${hue}, ${saturation}%, ${lightness}%, ${opacity})`;
+      heartIcon.style.filter = `drop-shadow(0 0 2px hsla(${hue}, ${saturation}%, ${lightness}%, ${glowOpacity})`; // Обновляем цвет свечения
 
       // Анимация увеличения сердечка
       heartButton.style.transition = 'transform 0.3s ease';
       heartButton.style.transform = `scale(${scale})`;
+
+      // Увеличиваем счётчик лайков
+      likeCount++;
+      localStorage.setItem('likeCount', likeCount.toString());
+      likeCountDisplay!.innerText = `Лайков: ${likeCount}`;
 
       if (clicks >= 40) {
         setTimeout(() => {
@@ -170,16 +185,27 @@ function setupHeartButton() {
           setTimeout(() => {
             heartButton.style.transform = `scale(1)`; // Возвращаем к нормальному размеру
             heartIcon.style.fill = `hsla(${hue}, ${saturation}%, ${lightness}%, ${opacity})`; // Применяем прозрачность
+            heartIcon.style.filter = `drop-shadow(0 0 2px hsla(${hue}, ${saturation}%, ${lightness}%, ${glowOpacity})`; // Обновляем цвет свечения
             isCooldown = true; // Включаем состояние ожидания
             setTimeout(() => {
               isCooldown = false; // Сбрасываем состояние ожидания
               // Устанавливаем прозрачность обратно на 0.1
               opacity = 0.1; // Возвращаем к изначальной прозрачности
               heartIcon.style.fill = `hsla(${hue}, ${saturation}%, ${lightness}%, ${opacity})`; // Возвращаем цвет
+              heartIcon.style.filter = `drop-shadow(0 0 2px hsla(${hue}, ${saturation}%, ${lightness}%, ${glowOpacity})`; // Обновляем цвет свечения
             }, 0); // Убираем задержку
           }, 100);
         }, 300);
       }
+    });
+
+    // Эффект свечения при наведении
+    heartButton.addEventListener('mouseenter', () => {
+      heartIcon.style.filter = `drop-shadow(0 0 8px hsla(${hue}, ${saturation}%, ${lightness}%, ${glowOpacity})`; // Свечение
+    });
+
+    heartButton.addEventListener('mouseleave', () => {
+      heartIcon.style.filter = `drop-shadow(0 0 2px hsla(${hue}, ${saturation}%, ${lightness}%, ${glowOpacity})`; // Убираем свечение
     });
   }
 }
