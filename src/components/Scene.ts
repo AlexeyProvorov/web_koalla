@@ -11,7 +11,7 @@ export class Scene {
   private mouse: THREE.Vector2 = new THREE.Vector2()
   private isAnimating: boolean = false
   private initialY: number = 0
-  private floatingAmplitude: number = 0.4
+  private floatingAmplitude: number = 0.6
   private floatingSpeed: number = 0.0015
   private elapsedTime: number = 0
   private rotationInertia = { x: 0, y: 0, z: 0 }
@@ -19,20 +19,34 @@ export class Scene {
   private isDragging: boolean = false
   private lastMousePosition = { x: 0, y: 0 }
 
-  // Массив описаний для 12 граней (ссылки здесь не используются)
+  private colors: THREE.Color[] = [
+    new THREE.Color('#FF9999'),  // Красный - Three.js проект
+    new THREE.Color('#99FF99'),  // Зеленый - React проект
+    new THREE.Color('#9999FF'),  // Синий - Vue проект
+    new THREE.Color('#FFDD99'),  // Золотой - Next.js проект
+    new THREE.Color('#FF99AA'),  // Розовый - Node.js проект
+    new THREE.Color('#99FFFF'),  // Циан - Python проект
+    new THREE.Color('#FFAA99'),  // Оранжевый - Angular проект
+    new THREE.Color('#AA99FF'),  // Индиго - Mobile App
+    new THREE.Color('#AAFF99'),  // Лайм - Game project
+    new THREE.Color('#CCCCCC'),  // Серый - DevOps проект
+    new THREE.Color('#99DDDD'),  // Морской - AI проект
+    new THREE.Color('#FFAA88')   // Терракотовый - Blockchain
+  ]
+
   private faceLinks: { link: string; info: string }[] = [
-    { link: 'https://project1.example.com', info: 'Project 1: Инфографика и описание 1' },
-    { link: 'https://project2.example.com', info: 'Project 2: Инфографика и описание 2' },
-    { link: 'https://project3.example.com', info: 'Project 3: Инфографика и описание 3' },
-    { link: 'https://project4.example.com', info: 'Project 4: Инфографика и описание 4' },
-    { link: 'https://project5.example.com', info: 'Project 5: Инфографика и описание 5' },
-    { link: 'https://project6.example.com', info: 'Project 6: Инфографика и описание 6' },
-    { link: 'https://project7.example.com', info: 'Project 7: Инфографика и описание 7' },
-    { link: 'https://project8.example.com', info: 'Project 8: Инфографика и описание 8' },
-    { link: 'https://project9.example.com', info: 'Project 9: Инфографика и описание 9' },
-    { link: 'https://project10.example.com', info: 'Project 10: Инфографика и описание 10' },
-    { link: 'https://project11.example.com', info: 'Project 11: Инфографика и описание 11' },
-    { link: 'https://project12.example.com', info: 'Project 12: Инфографика и описание 12' }
+    { link: 'https://threejs-portfolio.com', info: '3D Portfolio: Интерактивное портфолио на Three.js' },
+    { link: 'https://react-dashboard.com', info: 'React Dashboard: Аналитическая панель управления' },
+    { link: 'https://vue-ecommerce.com', info: 'Vue E-commerce: Онлайн магазин с корзиной' },
+    { link: 'https://next-blog.com', info: 'Next.js Blog: Блог-платформа с SSR' },
+    { link: 'https://node-api.com', info: 'Node.js API: RESTful сервис с MongoDB' },
+    { link: 'https://python-ml.com', info: 'Python ML: Система анализа данных' },
+    { link: 'https://angular-crm.com', info: 'Angular CRM: Система управления клиентами' },
+    { link: 'https://react-native-app.com', info: 'Mobile App: Кроссплатформенное приложение' },
+    { link: 'https://unity-game.com', info: 'Game Dev: 2D платформер на Unity' },
+    { link: 'https://devops-tools.com', info: 'DevOps: CI/CD пайплайны и мониторинг' },
+    { link: 'https://ai-assistant.com', info: 'AI Chat: Чат-бот на основе ML' },
+    { link: 'https://blockchain-dapp.com', info: 'DApp: Децентрализованное приложение' }
   ]
 
   constructor(container: HTMLElement) {
@@ -41,14 +55,13 @@ export class Scene {
     this.scene.background = new THREE.Color(0x1a1a1a)
 
     // Камера
-    this.camera = new THREE.PerspectiveCamera(
-      75, window.innerWidth / window.innerHeight, 0.1, 1000
-    )
-    this.camera.position.z = 7
+    const aspect = container.clientWidth / container.clientHeight
+    this.camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000)
+    this.camera.position.z = 16
 
     // Рендерер
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
-    this.renderer.setSize(window.innerWidth, window.innerHeight)
+    this.renderer.setSize(container.clientWidth, container.clientHeight)
     container.appendChild(this.renderer.domElement)
 
     // Свет
@@ -106,16 +119,13 @@ export class Scene {
    * Разбивает додекаэдр на 12 граней (по 3 треугольника на грань).
    */
   private createDodecahedronFaces(woodTexture: THREE.Texture) {
-    const geometry = new THREE.DodecahedronGeometry(2)
+    const geometry = new THREE.DodecahedronGeometry(6)
     const nonIndexedGeometry = geometry.toNonIndexed()
 
     const positionAttribute = nonIndexedGeometry.getAttribute('position')
     const positions = Array.from(positionAttribute.array)
     const totalTriangles = positions.length / 9
     const faceCount = 12
-
-    // Определяем фиксированные цвета радуги для граней
-    const colors = this.getShuffledUniqueColors()
 
     for (let faceIndex = 0; faceIndex < faceCount; faceIndex++) {
       // Собираем вершины (3 треугольника => 9 вершин)
@@ -138,7 +148,7 @@ export class Scene {
       this.generateFaceUVs(faceGeometry)
 
       // Используем предопределенный цвет вместо генерации
-      const faceColor = colors[faceIndex]
+      const faceColor = this.colors[faceIndex]
 
       // Создаём текстуру с выгравированным текстом
       const engravedTexture = this.createEngravedTexture(
@@ -324,7 +334,11 @@ export class Scene {
 
     this.raycaster.setFromCamera(this.mouse, this.camera)
     const intersects = this.raycaster.intersectObjects(this.dodecahedronGroup.children, false)
+    
     if (intersects.length > 0) {
+      const clickedFaceIndex = this.dodecahedronGroup.children.indexOf(intersects[0].object)
+      
+      // Анимация качания
       const initialRotationX = this.dodecahedronGroup.rotation.x
       const swingAngle = 0.2
 
@@ -335,16 +349,37 @@ export class Scene {
       const tweenReturn = new TWEEN.Tween(this.dodecahedronGroup.rotation)
         .to({ x: initialRotationX }, 400)
         .easing(TWEEN.Easing.Bounce.Out)
+        .onComplete(() => {
+          // Обновляем карусель после анимации
+          this.updateCarousel(clickedFaceIndex)
+        })
 
       tweenSwing.chain(tweenReturn)
       tweenSwing.start()
     }
   }
 
+  private updateCarousel(faceIndex: number) {
+    const cards = document.querySelectorAll('.project-card')
+    cards.forEach((card, index) => {
+      if (index === faceIndex) {
+        card.classList.add('active')
+      } else {
+        card.classList.remove('active')
+      }
+    })
+  }
+
   private onWindowResize() {
-    this.camera.aspect = window.innerWidth / window.innerHeight
+    const container = this.renderer.domElement.parentElement
+    if (!container) return
+    
+    const width = container.clientWidth
+    const height = container.clientHeight
+    
+    this.camera.aspect = width / height
     this.camera.updateProjectionMatrix()
-    this.renderer.setSize(window.innerWidth, window.innerHeight)
+    this.renderer.setSize(width, height)
   }
 
   private onMouseDown = (event: MouseEvent) => {
@@ -405,50 +440,15 @@ export class Scene {
     this.renderer.render(this.scene, this.camera)
   }
 
-  private getShuffledUniqueColors(): THREE.Color[] {
-    const colors = [
-      new THREE.Color('#FF9999'),  // Яркий красный
-      new THREE.Color('#99FF99'),  // Яркий зеленый
-      new THREE.Color('#9999FF'),  // Яркий синий
-      new THREE.Color('#FFDD99'),  // Яркий золотой
-      new THREE.Color('#FF99AA'),  // Яркий розовый
-      new THREE.Color('#99FFFF'),  // Яркий циан
-      new THREE.Color('#FFAA99'),  // Яркий оранжевый
-      new THREE.Color('#AA99FF'),  // Яркий индиго
-      new THREE.Color('#AAFF99'),  // Яркий лайм
-      new THREE.Color('#CCCCCC'),  // Светло-серый
-      new THREE.Color('#99DDDD'),  // Яркий морской
-      new THREE.Color('#FFAA88')   // Яркий терракотовый
-    ]
-    
-    // Функция для проверки схожести цветов
-    const areSimilarColors = (color1: THREE.Color, color2: THREE.Color): boolean => {
-      const threshold = 0.15
-      const hsl1: { h: number; s: number; l: number } = { h: 0, s: 0, l: 0 }
-      const hsl2: { h: number; s: number; l: number } = { h: 0, s: 0, l: 0 }
-      color1.getHSL(hsl1)
-      color2.getHSL(hsl2)
-      
-      return Math.abs(hsl1.h - hsl2.h) < threshold &&
-             Math.abs(hsl1.s - hsl2.s) < threshold
-    }
+  public getFaceInfo(index: number): string {
+    return this.faceLinks[index].info
+  }
 
-    // Перемешиваем массив
-    for (let i = colors.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[colors[i], colors[j]] = [colors[j], colors[i]]
-    }
+  public getFaceLink(index: number): string {
+    return this.faceLinks[index].link
+  }
 
-    // Проверяем и исправляем похожие цвета
-    for (let i = 0; i < colors.length - 1; i++) {
-      for (let j = i + 1; j < colors.length; j++) {
-        if (areSimilarColors(colors[i], colors[j])) {
-          const nextIndex = (j + 1) % colors.length
-          ;[colors[j], colors[nextIndex]] = [colors[nextIndex], colors[j]]
-        }
-      }
-    }
-
-    return colors
+  public getFaceColor(index: number): string {
+    return this.colors[index].getStyle()
   }
 }

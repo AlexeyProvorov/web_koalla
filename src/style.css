@@ -5,31 +5,151 @@
 }
 
 body {
-  overflow: hidden;
   background-color: #1a1a1a;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-#scene-container {
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.header {
   position: fixed;
   top: 0;
   left: 0;
+  right: 0;
+  background-color: rgba(26, 26, 26, 0.95);
+  padding: 1rem 2rem;
+  z-index: 20;
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(100, 108, 255, 0.3);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.logo-container {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #646cff, #535bf2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-text {
+  color: white;
+  font-size: 1.5em;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.header h1 {
+  color: white;
+  font-size: 1.8em;
+  margin: 0;
+  font-weight: 500;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-links a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 1.1em;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-links a:hover {
+  color: #646cff;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #646cff;
+  transition: width 0.3s ease;
+}
+
+.nav-links a:hover::after {
   width: 100%;
-  height: 100vh;
+}
+
+.container {
+  padding-top: 100px;
+  display: grid;
+  grid-template-columns: 600px 1fr;
+  min-height: 100vh;
+}
+
+.left-section {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  left: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 1rem;
+  z-index: 10;
+}
+
+.model-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background-color: #1a1a1a;
+  border: 2px solid #646cff;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#scene-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.right-section {
+  position: absolute;
+  left: 650px;
+  right: 0;
+  top: 0px;
+  bottom: 0;
+  padding: 2rem;
+  display: flex;
+  align-items: center;
 }
 
 .welcome {
-  position: fixed;
-  top: 20%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  text-align: left;
   color: white;
-  text-align: center;
-  z-index: 1;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  margin-bottom: 2rem;
 }
 
 .welcome h1 {
-  font-size: 3em;
+  font-size: 2.5em;
+  margin-bottom: 1rem;
 }
 
 :root {
@@ -59,13 +179,6 @@ a:hover {
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
-}
-
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
 }
 
 .logo {
@@ -119,4 +232,86 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+.projects-carousel {
+  width: 100%;
+  height: 600px;
+  padding: 2rem;
+  background: rgba(26, 26, 26, 0.5);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(100, 108, 255, 0.2);
+}
+
+.carousel-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.carousel-track {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.project-card {
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+  border-radius: 12px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: linear-gradient(135deg, 
+    var(--card-color), 
+    rgba(26, 26, 26, 0.9)
+  );
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.project-card.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.project-card h2 {
+  color: var(--card-color);
+  font-size: 2em;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.project-description {
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.project-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.project-link {
+  padding: 0.5rem 1.5rem;
+  background: linear-gradient(135deg, #646cff, #535bf2);
+  border-radius: 6px;
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.project-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(100, 108, 255, 0.3);
 }
