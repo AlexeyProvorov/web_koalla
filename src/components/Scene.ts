@@ -11,8 +11,10 @@ export class Scene {
   private mouse: THREE.Vector2 = new THREE.Vector2()
   private isAnimating: boolean = false
   private initialY: number = 0
-  private floatingAmplitude: number = 0.6
-  private floatingSpeed: number = 0.0015
+  private initialX: number = 0
+  private initialZ: number = 0
+  private floatingAmplitude: number = 2.5
+  private floatingSpeed: number = 0.002
   private elapsedTime: number = 0
   private rotationInertia = { x: 0, y: 0, z: 0 }
   private controls: OrbitControls
@@ -57,7 +59,7 @@ export class Scene {
     // Камера
     const aspect = container.clientWidth / container.clientHeight
     this.camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000)
-    this.camera.position.z = 16
+    this.camera.position.z = 14
 
     // Рендерер с прозрачностью
     this.renderer = new THREE.WebGLRenderer({ 
@@ -80,23 +82,8 @@ export class Scene {
     this.dodecahedronGroup = new THREE.Group()
     this.scene.add(this.dodecahedronGroup)
 
-    // Загружаем текстуру древесины
-    const textureLoader = new THREE.TextureLoader()
-    textureLoader.load(
-      '/wood_texture.jpg',
-      (texture) => {
-        console.log('Текстура успешно загружена')
-        texture.needsUpdate = true
-        this.createDodecahedronFaces(texture)
-      },
-      undefined,
-      (error) => {
-        console.error('Ошибка загрузки текстуры:', error)
-        // При ошибке используем "пустую" текстуру
-        const fallbackTexture = new THREE.Texture()
-        this.createDodecahedronFaces(fallbackTexture)
-      }
-    )
+    // Загружаем случайную текстуру
+    this.loadRandomTexture()
 
     // События
     window.addEventListener('keydown', this.handleKeyPress.bind(this))
@@ -421,12 +408,17 @@ export class Scene {
       
       // Существующая анимация парения
       const newY = this.initialY + Math.sin(this.elapsedTime) * this.floatingAmplitude
+      const newX = this.initialX + Math.cos(this.elapsedTime * 0.8) * (this.floatingAmplitude * 0.5)
+      const newZ = this.initialZ + Math.sin(this.elapsedTime * 0.6) * (this.floatingAmplitude * 0.3)
+
       this.dodecahedronGroup.position.y = newY
+      this.dodecahedronGroup.position.x = newX
+      this.dodecahedronGroup.position.z = newZ
       
       // Автоматическое вращение (если не перетаскиваем)
-      this.dodecahedronGroup.rotation.x += Math.sin(this.elapsedTime * 0.2) * 0.0006
-      this.dodecahedronGroup.rotation.y += Math.cos(this.elapsedTime * 0.15) * 0.0006
-      this.dodecahedronGroup.rotation.z += Math.sin(this.elapsedTime * 0.1) * 0.0004
+      this.dodecahedronGroup.rotation.x += Math.sin(this.elapsedTime * 0.2) * 0.001
+      this.dodecahedronGroup.rotation.y += Math.cos(this.elapsedTime * 0.15) * 0.001
+      this.dodecahedronGroup.rotation.z += Math.sin(this.elapsedTime * 0.1) * 0.0008
     }
     
     // Применяем инерцию
@@ -454,5 +446,32 @@ export class Scene {
 
   public getFaceColor(index: number): string {
     return this.colors[index].getStyle()
+  }
+
+  private loadRandomTexture(): void {
+    const textures = [
+      '/cosmos_texture.jpg',
+      '/stone_texture.jpg',
+      '/wood_texture.jpg'
+    ]
+    
+    // Выбираем случайную текстуру
+    const randomTexture = textures[Math.floor(Math.random() * textures.length)]
+    
+    const textureLoader = new THREE.TextureLoader()
+    textureLoader.load(
+      randomTexture,
+      (texture) => {
+        console.log('Текстура успешно загружена:', randomTexture)
+        texture.needsUpdate = true
+        this.createDodecahedronFaces(texture)
+      },
+      undefined,
+      (error) => {
+        console.error('Ошибка загрузки текстуры:', error)
+        const fallbackTexture = new THREE.Texture()
+        this.createDodecahedronFaces(fallbackTexture)
+      }
+    )
   }
 }
