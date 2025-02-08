@@ -13,7 +13,7 @@ export class Scene {
   private initialY: number = 0
   private initialX: number = 0
   private initialZ: number = 0
-  private floatingAmplitude: number = 2.5
+  private floatingAmplitude: number = 1.5
   private floatingSpeed: number = 0.002
   private elapsedTime: number = 0
   private rotationInertia = { x: 0, y: 0, z: 0 }

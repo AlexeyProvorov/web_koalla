@@ -1,7 +1,7 @@
 import './style.css'
 import { Scene } from './components/Scene'
 
-// Сначала создаём HTML структуру
+// Создаём HTML-структуру
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <header class="header">
     <div class="header-content">
@@ -43,34 +43,32 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <button id="heart-btn" class="heart-button">
       <svg class="heart-icon" viewBox="0 0 32 32">
         <path d="M16,28.261c0,0-14-7.926-14-17.046c0-9.356,13.159-10.399,14-0.454c1.011-9.938,14-8.903,14,0.454
-        C30,20.335,16,28.261,16,28.261z"/>
+          C30,20.335,16,28.261,16,28.261z"/>
       </svg>
     </button>
     <div id="like-count">Лайков: 0</div>
   </div>
-`
+`;
 
-// После создания DOM-структуры инициализируем сцену
-const container = document.querySelector('#scene-container')
+// Инициализируем сцену (если используется)
+const container = document.querySelector('#scene-container');
 if (container) {
-  const scene = new Scene(container as HTMLElement)
-  
-  // Теперь добавляем карточки проектов
-  const carouselTrack = document.querySelector('.carousel-track')
+  const scene = new Scene(container as HTMLElement);
+
+  // Добавляем карточки проектов
+  const carouselTrack = document.querySelector('.carousel-track');
   if (carouselTrack) {
-    // Очищаем существующие карточки
-    carouselTrack.innerHTML = ''
-    
-    // Создаем массив карточек в правильном порядке
+    carouselTrack.innerHTML = '';
+
     const cards = Array.from({ length: 12 }, (_, i) => {
-      const card = document.createElement('div')
-      card.className = 'project-card'
-      
-      const backgroundColor = scene.getFaceColor(i)
-      const projectInfo = scene.getFaceInfo(i)
-      const projectLink = scene.getFaceLink(i)
-      
-      card.style.setProperty('--card-color', backgroundColor)
+      const card = document.createElement('div');
+      card.className = 'project-card';
+
+      const backgroundColor = scene.getFaceColor(i);
+      const projectInfo = scene.getFaceInfo(i);
+      const projectLink = scene.getFaceLink(i);
+
+      card.style.setProperty('--card-color', backgroundColor);
       card.innerHTML = `
         <h2>Проект ${i + 1}</h2>
         <p class="project-description">${projectInfo}</p>
@@ -78,34 +76,32 @@ if (container) {
           <a href="${projectLink}" class="project-link" target="_blank">Демо</a>
           <a href="#" class="project-link">GitHub</a>
         </div>
-      `
-      return card
-    })
-    
-    // Добавляем карточки в правильном порядке
+      `;
+      return card;
+    });
+
     cards.forEach((card, index) => {
-      if (index === 0) card.classList.add('active')
-      carouselTrack.appendChild(card)
-    })
+      if (index === 0) card.classList.add('active');
+      carouselTrack.appendChild(card);
+    });
   }
 }
 
-// Добавьте эту функцию после основного кода
 function createStars() {
   const numberOfStars = 100;
   const container = document.body;
-  
+
   for (let i = 0; i < numberOfStars; i++) {
     const star = document.createElement('div');
     star.className = 'star';
-    
+
     // Случайное положение
     star.style.left = `${Math.random() * 100}%`;
     star.style.top = `${Math.random() * 100}%`;
-    
+
     // Случайная длительность мерцания
     star.style.setProperty('--twinkle-duration', `${2 + Math.random() * 3}s`);
-    
+
     container.appendChild(star);
   }
 }
@@ -115,8 +111,7 @@ function setupHeartButton() {
   const likeCountDisplay = document.getElementById('like-count');
   let likeCount = parseInt(localStorage.getItem('likeCount') || '0', 10);
 
-  heartButton.style.opacity = '0.2'; // Начальная прозрачность
-  heartButton.style.transition = 'opacity 0.5s ease, fill 0.5s ease'; // Плавный переход для цвета и прозрачности
+  heartButton!.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
   likeCountDisplay!.innerText = `Лайков: ${likeCount}`;
 
   if (heartButton) {
@@ -125,22 +120,31 @@ function setupHeartButton() {
       localStorage.setItem('likeCount', likeCount.toString());
       likeCountDisplay!.innerText = `Лайков: ${likeCount}`;
 
-      heartButton.style.opacity = '1';
-      heartButton.disabled = true; // Отключаем кнопку после нажатия
+      // Добавляем класс active — сердечко становится большим (scale 1) и ярким (opacity 0.8)
+      heartButton.classList.add('active');
 
-      // Генерируем новый случайный цвет для сердечка
-      const newHue = Math.random() * 360;
-      const heartIcon = heartButton.querySelector('.heart-icon') as SVGElement;
-      heartIcon.style.fill = `hsla(${newHue}, 80%, 50%, 1)`; // Устанавливаем новый цвет
+      // Добавляем класс beat для пульсации
+      heartButton.classList.add('beat');
+      (heartButton as HTMLButtonElement).disabled = true;
 
-      // Возвращаем сердечко в исходное состояние через 1 секунду
+      // Через 0.5 секунд удаляем класс beat, оставляя активное состояние (scale 1)
       setTimeout(() => {
-        heartButton.style.opacity = '0.2'; // Возвращаем прозрачность
-        heartButton.disabled = false; // Включаем кнопку снова
-      }, 1000);
+        heartButton.classList.remove('beat');
+      }, 500);
+
+      // Через 3 секунды возвращаем сердечко в исходное состояние, обновляем цвет и разблокируем кнопку
+      setTimeout(() => {
+        const newHue = Math.random() * 360;
+        const heartIcon = heartButton.querySelector('.heart-icon') as SVGElement;
+        heartIcon.style.fill = `hsla(${newHue}, 80%, 50%, 1)`;
+        heartButton.classList.remove('active');
+        (heartButton as HTMLButtonElement).disabled = false;
+      }, 3000);
     });
   }
 }
 
-createStars()
-setupHeartButton()
+document.addEventListener('DOMContentLoaded', () => {
+  createStars();
+  setupHeartButton();
+});
